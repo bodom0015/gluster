@@ -1,0 +1,140 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: glfs-server1
+  labels:
+    app: glfs-server1
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: glfs-server1
+        app: glfs-server1
+    spec:
+      containers:
+        - image: bodom0015/gluster:NDS-785
+          imagePullPolicy: Always
+          name: glfs-server
+          env:
+          - name: VOLNAME
+            value: "global"
+          - name: VOLSPEC
+            value: "replica 2 transport tcp"
+          - name: GFS_SRV_GLOBAL
+            value: "srv-$(VOLNAME)"
+          - name: VOLPATH
+            value: "/var/glfs/$(VOLNAME)"
+          - name: SRV_VOLPATH
+            value: "/media/brick0"
+          - name: BRICKS
+            value: "$(GLFS_SERVER1_SERVICE_HOST):$(SRV_VOLPATH)/brick $(GLFS_SERVER2_SERVICE_HOST):$(SRV_VOLPATH)/brick"
+          - name: PEERS
+            value: "$(GLFS_SERVER1_SERVICE_HOST) $(GLFS_SERVER2_SERVICE_HOST)"
+          - name: DEBUG
+            value: "true"
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: brick0
+              mountPath: /media/brick0
+            - name: glconfig
+              mountPath: /etc/glconfig
+          command:
+            - "entrypoint"
+            - "server"
+          readinessProbe:
+            exec:
+              command:
+              - readiness
+            initialDelaySeconds: 5
+            timeoutSeconds: 1
+          livenessProbe:
+            tcpSocket:
+              port: 24007
+            initialDelaySeconds: 5
+            timeoutSeconds: 1
+          lifecycle:
+            preStop:
+              exec:
+                command: 
+                  - stop-server
+      volumes:
+        - name: brick0
+          persistentVolumeClaim:
+            claimName: claim1
+        - name: glconfig
+          configMap:
+            name: glfs-config-global
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: glfs-server2
+  labels:
+    app: glfs-server2
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: glfs-server2
+        app: glfs-server2
+    spec:
+      hostNetwork: true
+      hostIPC: true
+      hostPID: true
+      containers:
+        - image: bodom0015/gluster:NDS-785
+          imagePullPolicy: Always
+          name: glfs-server
+          env:
+          - name: VOLNAME
+            value: "global"
+          - name: VOLSPEC
+            value: "replica 2 transport tcp"
+          - name: GFS_SRV_GLOBAL
+            value: "srv-$(VOLNAME)"
+          - name: VOLPATH
+            value: "/var/glfs/$(VOLNAME)"
+          - name: SRV_VOLPATH
+            value: "/media/brick0"
+          - name: BRICKS
+            value: "$(GLFS_SERVER1_SERVICE_HOST):$(SRV_VOLPATH)/brick $(GLFS_SERVER2_SERVICE_HOST):$(SRV_VOLPATH)/brick"
+          - name: PEERS
+            value: "$(GLFS_SERVER1_SERVICE_HOST) $(GLFS_SERVER2_SERVICE_HOST)"
+          - name: DEBUG
+            value: "true"
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: brick0
+              mountPath: /media/brick0
+            - name: glconfig
+              mountPath: /etc/glconfig
+          command:
+            - entrypoint
+            - server
+          readinessProbe:
+            exec:
+              command:
+              - readiness
+            initialDelaySeconds: 5
+            timeoutSeconds: 1
+          livenessProbe:
+            tcpSocket:
+              port: 24007
+            initialDelaySeconds: 5
+            timeoutSeconds: 1
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - stop-server
+      volumes:
+        - name: brick0
+          persistentVolumeClaim:
+            claimName: claim2
+        - name: glconfig
+          configMap:
+            name: glfs-config-global

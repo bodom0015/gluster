@@ -1,0 +1,82 @@
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: glfs-client-global
+  labels:
+    app: glfs-client-global
+spec:
+  template:
+    metadata:
+      labels:
+        name: glfs-client-global
+    spec:
+      hostNetwork: true
+      hostIPC: true
+      hostPID: true
+      containers:
+        - image: bodom0015/gluster:NDS-785
+          imagePullPolicy: Always
+          name: glfs-client
+          command:
+            - entrypoint
+            - client
+          readinessProbe:
+            exec:
+              command:
+              - readiness
+          lifecycle:
+            preStop:
+              exec:
+                command: 
+                  - stop-client
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: cgroup
+              mountPath: /sys/fs/cgroup
+            - name: var-lib-glusterd
+              mountPath: /var/lib/glusterd
+            - name: var-log-glfs
+              mountPath: /var/log/glusterfs
+            - name: hostroot
+              mountPath: /media/host
+              readOnly: true
+            - name: run
+              mountPath: /run
+            - name: host-proc
+              mountPath: /media-host/proc
+            - name: dev
+              mountPath: /dev
+            - name: mnt-dir
+              mountPath: /var/glfs
+            - name: glconfig
+              mountPath: /etc/glconfig
+      volumes:
+        - name: cgroup
+          hostPath:
+              path: /sys/fs/cgroup
+        - name: var-lib-glusterd
+          hostPath:
+              path: /var/lib/glusterd
+        - name: var-log-glfs
+          hostPath:
+              path: /var/log/glusterfs
+        - name: hostroot
+          hostPath:
+              path: /
+        - name: run
+          hostPath:
+              path: /run
+        - name: host-proc
+          hostPath:
+              path: /proc
+        - name: dev
+          hostPath:
+              path: /dev
+        - name: mnt-dir
+          hostPath:
+              path: /var/glfs
+        - name: glconfig
+          configMap:
+            name: glfs-config-global
+

@@ -1,5 +1,5 @@
 #!/bin/bash
-. /etc/glconfig/glfs-config-global
+#. /etc/glconfig/glfs-config-global
 [ $DEBUG ] && set -x  
 
 while nsenter --mount=/media/host/proc/1/ns/mnt df -T ${VOLPATH} | tail -n+2 | grep glusterfs; do

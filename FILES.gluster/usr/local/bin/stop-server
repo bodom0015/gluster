@@ -1,5 +1,5 @@
 #!/bin/bash
-. /etc/glconfig/glfs-config-global
+#. /etc/glconfig/glfs-config-global
 [ $DEBUG ] && set -x
 
 echo "glfs stop-server, stop vol"
