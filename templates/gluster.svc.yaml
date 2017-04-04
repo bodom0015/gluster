@@ -1,23 +1,12 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: glfs-server1
+  name: glusterfs-cluster
   labels:
-    app: glfs-server1
+    app: glusterfs-cluster
 spec:
   ports:
-    - port: 24007
+    - port: 1 
   selector:
-    app: glfs-server1
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: glfs-server2
-  labels:
-    app: glfs-server2
-spec:
-  ports:
-    - port: 24007
-  selector:
-    app: glfs-server2
+    app: glusterfs-cluster
+   
